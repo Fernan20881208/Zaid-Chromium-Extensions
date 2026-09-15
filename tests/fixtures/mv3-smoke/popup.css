@@ -1,0 +1,4 @@
+body { font: 15px system-ui; margin: 18px; min-width: 280px; max-width: 680px; }
+h1 { font-size: 20px; }
+button { padding: 12px; margin: 4px 0; cursor: pointer; }
+pre { white-space: pre-wrap; overflow-wrap: anywhere; }

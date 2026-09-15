@@ -1,0 +1,11 @@
+{
+  "manifest_version": 3,
+  "name": "Zaid MV3 Smoke Test",
+  "version": "1.0.0",
+  "description": "Checks extension APIs on example.com without sending data anywhere.",
+  "permissions": ["storage", "tabs", "scripting", "userScripts", "alarms"],
+  "host_permissions": ["https://example.com/*"],
+  "background": {"service_worker": "background.js"},
+  "action": {"default_popup": "popup.html"},
+  "options_page": "popup.html"
+}
