@@ -1,14 +1,5 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
 
-ROOT=$(pwd)
-mkdir -p "$ROOT/work"
-
-cd "$ROOT/work"
-
-echo "[Zaid Chromium] Chromium source checkout stage"
-echo "[Zaid Chromium] Apply extension patches stage"
-echo "[Zaid Chromium] GN configuration stage"
-echo "[Zaid Chromium] Build APK stage"
-
-# Real Chromium compilation will be enabled after depot_tools and source sync are added.
+ZAID_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+exec python3 "$ZAID_ROOT/scripts/build.py" "$@"

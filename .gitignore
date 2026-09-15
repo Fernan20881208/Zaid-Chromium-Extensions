@@ -1,0 +1,10 @@
+/work/
+/dist/
+/out/
+__pycache__/
+*.pyc
+*.jks
+*.keystore
+*.apk
+*.idsig
+/.venv/

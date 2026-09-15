@@ -1,44 +1,126 @@
-name: Build Zaid Chromium Extensions ARM64
-
+name: Build ARM64 APK
 on:
   workflow_dispatch:
+    inputs:
+      publish_release:
+        description: Publish a signed experimental GitHub release
+        type: boolean
+        default: false
   push:
-    branches: [ main ]
-
+    branches: [main]
+    tags: ['zaid-v*']
+    paths:
+      - 'chromium/**'
+      - 'scripts/**'
+      - 'patches/**'
+      - 'src/**'
+      - '.github/workflows/build-arm64.yml'
+permissions:
+  contents: read
+concurrency:
+  group: apk-${{ github.ref }}
+  cancel-in-progress: false
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ${{ fromJSON(vars.CHROMIUM_RUNNER || '"ubuntu-24.04"') }}
     timeout-minutes: 360
-
+    env:
+      ZAID_REQUIRE_RELEASE_SIGNING: ${{ (inputs.publish_release || startsWith(github.ref, 'refs/tags/')) && '1' || '0' }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install dependencies
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Check build capacity before downloading Chromium
+        run: python3 scripts/preflight.py --work work
+      - name: Check release signing configuration
+        if: env.ZAID_REQUIRE_RELEASE_SIGNING == '1'
+        env:
+          ZAID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ZAID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ZAID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ZAID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
-          sudo apt update
-          sudo apt install -y git python3 curl unzip ninja-build openjdk-17-jdk
-
-      - name: Prepare workspace
+          python3 - <<'PY'
+          import os
+          names = ['ZAID_KEYSTORE_BASE64', 'ZAID_KEYSTORE_PASSWORD', 'ZAID_KEY_ALIAS', 'ZAID_KEY_PASSWORD']
+          if any(not os.environ.get(name) for name in names):
+              raise SystemExit('A release requires all four ANDROID signing secrets. No key was generated or substituted.')
+          PY
+      - name: Install checkout prerequisites
         run: |
-          mkdir -p chromium
-          echo "Chromium source preparation stage"
-
-      - name: Configure build metadata
+          sudo -n apt-get update
+          sudo -n apt-get install -y git python3 curl xz-utils unzip lsb-release ca-certificates
+      - name: Check patches and project tests
         run: |
-          mkdir -p out/arm64
-          cat > out/arm64/args.gn <<'EOF'
-          target_os = "android"
-          target_cpu = "arm64"
-          is_debug = false
-          is_official_build = true
-          symbol_level = 0
-          enable_extensions_core = true
-          enable_desktop_android_extensions = true
-          EOF
-
-      - name: Upload build configuration
+          python3 -m unittest discover -s tests -v
+          python3 scripts/source_contract.py --output dist/source-check.json
+      - name: Sync Chromium, configure GN and compile chrome_public_apk
+        run: |
+          set -o pipefail
+          mkdir -p dist
+          scripts/build-apk.sh --install-deps --no-package 2>&1 | tee dist/build.log
+      - name: Sign and verify APK
+        env:
+          ZAID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ZAID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ZAID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ZAID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: python3 scripts/package_apk.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: zaid-chromium-arm64
+          path: |
+            dist/*.apk
+            dist/SHA256SUMS
+            dist/build-metadata.json
+            dist/revision.json
+            dist/args.gn
+            dist/signing-certificate.txt
+            dist/apk-badging.txt
+            dist/release-notes.md
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+      - name: Upload diagnostics
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: zaid-chromium-arm64-config
-          path: out/arm64/args.gn
+          name: build-diagnostics
+          path: |
+            dist/build.log
+            dist/source-check.json
+          if-no-files-found: ignore
+          retention-days: 7
+  release:
+    needs: build
+    if: inputs.publish_release || startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: zaid-chromium-arm64
+          path: dist
+      - name: Publish signed experimental release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          ZAID_SOURCE_SHA: ${{ github.sha }}
+          ZAID_REF: ${{ github.ref }}
+          ZAID_REF_NAME: ${{ github.ref_name }}
+          ZAID_RUN_NUMBER: ${{ github.run_number }}
+        run: |
+          cd dist
+          sha256sum --check SHA256SUMS
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          data = json.loads(Path('build-metadata.json').read_text())
+          assert data['compiled'] is True and data['signing'] == 'release'
+          assert data['fork_commit'] == os.environ['ZAID_SOURCE_SHA']
+          PY
+          ZAID_TAG="zaid-v$(python3 -c 'import json; print(json.load(open("revision.json"))["version"])')-r${ZAID_RUN_NUMBER}"
+          if [[ "$ZAID_REF" == refs/tags/* ]]; then ZAID_TAG="$ZAID_REF_NAME"; fi
+          gh release create "$ZAID_TAG" ./*.apk SHA256SUMS build-metadata.json revision.json args.gn signing-certificate.txt \
+            --target "$ZAID_SOURCE_SHA" --prerelease --title "Zaid Chromium Extensions $ZAID_TAG" --notes-file release-notes.md

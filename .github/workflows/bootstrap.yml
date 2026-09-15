@@ -1,31 +1,33 @@
-name: Zaid Chromium Extensions Bootstrap
-
+name: Validate source and patches
 on:
   workflow_dispatch:
-
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+concurrency:
+  group: validate-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
-  bootstrap:
+  validate:
     runs-on: ubuntu-24.04
-
+    timeout-minutes: 30
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y git python3 curl unzip ninja-build
-
-      - name: Install depot_tools
-        run: |
-          git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git $HOME/depot_tools
-          echo "$HOME/depot_tools" >> $GITHUB_PATH
-
-      - name: Prepare workspace
-        run: |
-          mkdir -p chromium
-          echo "Chromium workspace ready"
-
-      - name: Status
-        run: |
-          echo "Next phase: fetch Chromium and apply Zaid patches"
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Repository tests
+        run: python3 -m unittest discover -s tests -v
+      - name: Verify pinned upstream and apply patches
+        run: python3 scripts/source_contract.py --output dist/source-check.json
+      - name: Runner capacity report
+        run: python3 scripts/preflight.py --report-only
+      - uses: actions/upload-artifact@v4
+        with:
+          name: source-validation
+          path: dist/source-check.json
+          if-no-files-found: error
