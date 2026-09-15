@@ -1,0 +1,124 @@
+{
+  "build/config/chrome_build.gni": {
+    "sha256": "15fbd89c3f22beda68036f00ad9184fdacd8d67d0c9da4c7744c3381cd540a01",
+    "contains": []
+  },
+  "chrome/VERSION": {
+    "sha256": "6d6983eb4df34757a7a7d41e258acb41f3d74ac3dc633d4345121f696cbc9a20",
+    "contains": [
+      "MAJOR=153",
+      "BUILD=8010",
+      "PATCH=36"
+    ]
+  },
+  "chrome/android/chrome_public_apk_tmpl.gni": {
+    "sha256": "269833e036c4557b0b84c7e218d5fb40dd3ef586c47bee68b74bdc599e11f093",
+    "contains": [
+      "chrome_public_manifest_package"
+    ]
+  },
+  "chrome/android/java/src/org/chromium/chrome/browser/ChromeTabbedActivity.java": {
+    "sha256": "d64a27db6c339e0747a168b52a049ec6407d2a6939dcb233e80c66f280cee3f6",
+    "contains": [
+      "R.id.manage_extensions_menu_id",
+      "UrlConstants.CHROME_EXTENSIONS_URL"
+    ]
+  },
+  "chrome/android/java/src/org/chromium/chrome/browser/tabbed_mode/TabbedAppMenuPropertiesDelegate.java": {
+    "sha256": "e06f38b02bac3b07c9f9dade5ce3df4945588a0a6b25d4dcf429ecc3231ee1bb",
+    "contains": []
+  },
+  "chrome/app/chromium_strings.grd": {
+    "sha256": "675f87ea0ed076bcecd5e217e0197bf5c2311c7735d9fec76434a6663fbefb93",
+    "contains": []
+  },
+  "chrome/browser/extensions/api/developer_private/developer_private_functions.cc": {
+    "sha256": "2c450c1f5a9457ee87672fe0fd4f7b267782676803a253dba5aa7a55ece91da4",
+    "contains": [
+      "DeveloperPrivateLoadUnpackedFunction::StartFileLoad",
+      "ResolveToVirtualDocumentPath",
+      "ExtensionRegistry::Get",
+      "CrxInstaller::Create"
+    ]
+  },
+  "chrome/browser/extensions/chrome_extension_system.cc": {
+    "sha256": "047ac0c8ee4dfe66c2dfb045861140607a96e3dd676206c6a6ab470979cddde8",
+    "contains": [
+      "ExtensionService",
+      "ServiceWorkerManager",
+      "UserScriptManager",
+      "ExtensionRegistry"
+    ]
+  },
+  "chrome/browser/resources/extensions/toolbar.css": {
+    "sha256": "f517ac11689fe06ad60dc532a8633c0f8e35547b0b0436a926342e253be66487",
+    "contains": []
+  },
+  "chrome/browser/resources/extensions/toolbar.html.ts": {
+    "sha256": "d1607653965b8e3cf1ddcfeffb112a08653fc3269f7f1338fa9764db9d4bf7a8",
+    "contains": []
+  },
+  "chrome/browser/resources/extensions/toolbar.ts": {
+    "sha256": "10ab3e3c5ffbb855e4f8054ebd39a0538164518a2de6f91b6ff56b604a1e0dbe",
+    "contains": []
+  },
+  "chrome/browser/ui/webui/chrome_web_ui_configs.cc": {
+    "sha256": "a8cc60ab8b89a216c3f3bd24f54e9b8215293a7b31ebd9b30f46442c3b0889f0",
+    "contains": [
+      "ExtensionsUIConfig"
+    ]
+  },
+  "chrome/browser/ui/webui/extensions/BUILD.gn": {
+    "sha256": "aebe2d5d8f0afd5db362791dff31a51577f25e85ed34098174a227862fd555de",
+    "contains": []
+  },
+  "chrome/browser/ui/webui/extensions/extensions_ui.cc": {
+    "sha256": "66e908a37951801d37b9b6cc7931716a1ce4cb99e1a13832236eb3bdca3a4e3f",
+    "contains": []
+  },
+  "chrome/common/extensions/api/_api_features.json": {
+    "sha256": "d9d6979051cdb21deb3aa0bd79a1270adbcbcdf5da8b5a17714ddb6571a7df57",
+    "contains": [
+      "\"tabs\""
+    ]
+  },
+  "extensions/browser/crx_installer.cc": {
+    "sha256": "0e2e3dc01857a713ed894054e39c5988b054a72356b753f1db3db9e88483c077",
+    "contains": [
+      "SandboxedUnpacker",
+      "GetExternalVerifierFormat",
+      "RunInstallerCallbacks"
+    ]
+  },
+  "extensions/browser/sandboxed_unpacker.cc": {
+    "sha256": "c062bf1f575444c3125e237d33eb727549905451a6e7a950b0ba273b3600dc5b",
+    "contains": [
+      "base::CopyFile(crx_info.path, temp_crx_path)"
+    ]
+  },
+  "extensions/buildflags/buildflags.gni": {
+    "sha256": "360b6ec592009bf445ccb7a9d0c2a666bb4d553a877c460557a04780cf9e4bcc",
+    "contains": [
+      "enable_extensions_core",
+      "enable_desktop_android_extensions = is_desktop_android"
+    ]
+  },
+  "extensions/common/api/_api_features.json": {
+    "sha256": "9c5137e5c05fa9a861bb11084626f0bbfd009c81d1618e8b89d5f76d174289a5",
+    "contains": [
+      "\"runtime\"",
+      "\"storage\"",
+      "\"scripting\"",
+      "\"userScripts\""
+    ]
+  },
+  "extensions/common/api/schema.gni": {
+    "sha256": "399637065f60978065c7c000fc86603eee7e40aa7dabd46d9e3a22560a9d44ba",
+    "contains": [
+      "runtime.json",
+      "storage.json",
+      "scripting.idl",
+      "user_scripts.webidl"
+    ]
+  }
+}

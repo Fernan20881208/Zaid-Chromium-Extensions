@@ -1,0 +1,9 @@
+{
+  "version": "153.0.8010.36",
+  "commit": "507c6ee3e2f3b2ca0e660547e5b9ea4820c67f4c",
+  "depot_tools_commit": "36a8df4ad006eaa0572fb446edb8145fe5403592",
+  "channel": "stable",
+  "verified_on": "2026-09-15",
+  "release_source": "https://chromereleases.googleblog.com/2026/09/",
+  "repository": "https://chromium.googlesource.com/chromium/src.git"
+}

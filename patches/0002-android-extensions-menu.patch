@@ -1,0 +1,22 @@
+diff --git a/chrome/android/java/src/org/chromium/chrome/browser/tabbed_mode/TabbedAppMenuPropertiesDelegate.java b/chrome/android/java/src/org/chromium/chrome/browser/tabbed_mode/TabbedAppMenuPropertiesDelegate.java
+--- a/chrome/android/java/src/org/chromium/chrome/browser/tabbed_mode/TabbedAppMenuPropertiesDelegate.java
++++ b/chrome/android/java/src/org/chromium/chrome/browser/tabbed_mode/TabbedAppMenuPropertiesDelegate.java
+@@ -444,6 +444,7 @@
+         // Extensions
+         if (shouldShowExtensionsItem()) {
+             modelList.add(buildExtensionsMenuItem(shouldShowIconBeforeItem));
++            modelList.add(buildManageExtensionsItem());
+         }
+ 
+         // Divider
+@@ -1108,10 +1109,6 @@
+ 
+     private ListItem buildManageExtensionsItem() {
+         assert shouldShowExtensionsItem();
+-
+-        // The id {@code R.id.extensions_menu_id} is used for both when this flag is enabled and
+-        // disabled but in different context.
+-        assert isSubmenusEnabled(mContext);
+ 
+         return AppMenuItemUtils.createStandardListItem(
+                 AppMenuItemUtils.buildModelForStandardMenuItem(

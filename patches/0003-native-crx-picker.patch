@@ -1,0 +1,148 @@
+diff --git a/chrome/browser/ui/webui/extensions/extensions_ui.cc b/chrome/browser/ui/webui/extensions/extensions_ui.cc
+--- a/chrome/browser/ui/webui/extensions/extensions_ui.cc
++++ b/chrome/browser/ui/webui/extensions/extensions_ui.cc
+@@ -15,6 +15,9 @@
+ #include "base/strings/utf_string_conversions.h"
+ #include "base/values.h"
+ #include "build/build_config.h"
++#if BUILDFLAG(IS_ANDROID)
++#include "chrome/browser/ui/webui/extensions/zaid_crx_install_handler.h"
++#endif
+ #include "chrome/browser/browser_process.h"
+ #include "chrome/browser/extensions/permissions_url_constants.h"
+ #include "chrome/browser/profiles/profile.h"
+@@ -548,6 +551,10 @@
+                                         base::Unretained(this)));
+ 
+   source = CreateAndAddExtensionsSource(profile, *in_dev_mode_);
++#if BUILDFLAG(IS_ANDROID)
++  source->AddString("zaidInstallCrx", "Instalar CRX");
++  web_ui->AddMessageHandler(std::make_unique<ZaidCrxInstallHandler>());
++#endif
+   ManagedUIHandler::Initialize(web_ui, source);
+ 
+   // Need to allow <object> elements so that the <extensionoptions> browser
+diff --git a/chrome/browser/ui/webui/extensions/BUILD.gn b/chrome/browser/ui/webui/extensions/BUILD.gn
+--- a/chrome/browser/ui/webui/extensions/BUILD.gn
++++ b/chrome/browser/ui/webui/extensions/BUILD.gn
+@@ -74,6 +74,16 @@
+       "//ui/webui",
+       "//ui/webui/tracked_element",
+     ]
++    if (is_android) {
++      sources += [
++        "zaid_crx_install_handler.cc",
++        "zaid_crx_install_handler.h",
++      ]
++      deps += [
++        "//chrome/browser/ui/select_file_policy",
++        "//ui/shell_dialogs",
++      ]
++    }
+     if (!is_android) {
+       deps += [
+         "//chrome/browser/ui/user_education",
+diff --git a/chrome/browser/resources/extensions/toolbar.ts b/chrome/browser/resources/extensions/toolbar.ts
+--- a/chrome/browser/resources/extensions/toolbar.ts
++++ b/chrome/browser/resources/extensions/toolbar.ts
+@@ -13,6 +13,7 @@
+ import type {CrToolbarElement} from 'chrome://resources/cr_elements/cr_toolbar/cr_toolbar.js';
+ import {I18nMixinLit} from 'chrome://resources/cr_elements/i18n_mixin_lit.js';
+ import {listenOnce} from 'chrome://resources/js/util.js';
++import {sendWithPromise} from 'chrome://resources/js/cr.js';
+ import {CrLitElement} from 'chrome://resources/lit/v3_0/lit.rollup.js';
+ import type {PropertyValues} from 'chrome://resources/lit/v3_0/lit.rollup.js';
+ 
+@@ -97,6 +98,8 @@
+        * Prevents initiating update while update is in progress.
+        */
+       isUpdating_: {type: Boolean},
++      zaidInstalling_: {type: Boolean},
++      zaidInstallError_: {type: String},
+     };
+   }
+ 
+@@ -112,6 +115,8 @@
+   protected accessor expanded_: boolean = false;
+   protected accessor showPackDialog_: boolean = false;
+   private accessor isUpdating_: boolean = false;
++  protected accessor zaidInstalling_: boolean = false;
++  protected accessor zaidInstallError_: string = "";
+ 
+   override firstUpdated(changedProperties: PropertyValues<this>) {
+     super.firstUpdated(changedProperties);
+@@ -192,6 +197,26 @@
+           this.fire('load-error', loadError);
+         });
+     chrome.metricsPrivate.recordUserAction('Options_LoadUnpackedExtension');
++  }
++
++  protected async onZaidInstallCrxClick_() {
++    if (this.zaidInstalling_ || !this.inDevMode) {
++      return;
++    }
++    this.zaidInstalling_ = true;
++    this.zaidInstallError_ = '';
++    try {
++      const installed = await sendWithPromise<boolean>('zaidInstallCrx');
++      if (installed) {
++        const toastManager = getToastManager();
++        toastManager.duration = TOAST_DURATION_MS;
++        toastManager.show(this.i18n('toolbarLoadUnpackedDone'));
++      }
++    } catch (error) {
++      this.zaidInstallError_ = String(error);
++    } finally {
++      this.zaidInstalling_ = false;
++    }
+   }
+ 
+   protected onPackClick_() {
+diff --git a/chrome/browser/resources/extensions/toolbar.html.ts b/chrome/browser/resources/extensions/toolbar.html.ts
+--- a/chrome/browser/resources/extensions/toolbar.html.ts
++++ b/chrome/browser/resources/extensions/toolbar.html.ts
+@@ -41,6 +41,14 @@
+ ` : ''}
+ <div id="devDrawer" ?expanded="${this.expanded_}">
+   <div id="buttonStrip">
++<if expr="is_android">
++    <cr-button id="zaidInstallCrx"
++        ?hidden="${!this.canLoadUnpacked_()}"
++        ?disabled="${this.zaidInstalling_ || !this.inDevMode}"
++        @click="${this.onZaidInstallCrxClick_}">
++      $i18n{zaidInstallCrx}
++    </cr-button>
++</if>
+     <cr-button ?hidden="${!this.canLoadUnpacked_()}" id="loadUnpacked"
+         @click="${this.onLoadUnpackedClick_}">
+       $i18n{toolbarLoadUnpacked}
+@@ -53,6 +61,11 @@
+       $i18n{toolbarUpdateNow}
+     </cr-button>
+   </div>
++<if expr="is_android">
++  <div id="zaidInstallError" role="alert" ?hidden="${!this.zaidInstallError_}">
++    ${this.zaidInstallError_}
++  </div>
++</if>
+ </div>
+ <!--_html_template_end_-->`;
+   // clang-format on
+diff --git a/chrome/browser/resources/extensions/toolbar.css b/chrome/browser/resources/extensions/toolbar.css
+--- a/chrome/browser/resources/extensions/toolbar.css
++++ b/chrome/browser/resources/extensions/toolbar.css
+@@ -97,3 +97,14 @@
+   width: 100%;
+ }
+ 
++
++#buttonStrip {
++  flex-wrap: wrap;
++  gap: 8px;
++}
++
++#zaidInstallError {
++  color: var(--cr-primary-text-color);
++  overflow-wrap: anywhere;
++  padding: 8px 16px;
++}

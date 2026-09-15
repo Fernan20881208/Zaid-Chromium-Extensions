@@ -1,3 +1,12 @@
-# Zaid Chromium Extensions
-# Initial patch placeholder
-# Will enable Chromium extension components after Chromium source bootstrap.
+diff --git a/build/config/chrome_build.gni b/build/config/chrome_build.gni
+--- a/build/config/chrome_build.gni
++++ b/build/config/chrome_build.gni
+@@ -34,7 +34,7 @@
+ 
+   # Set to true to set defaults that enable features on Android that are more
+   # typically available on desktop.
+-  is_desktop_android = false
++  is_desktop_android = target_os == "android"
+ 
+   if (is_android) {
+     # By default, Trichrome channels are compiled using separate package names.
