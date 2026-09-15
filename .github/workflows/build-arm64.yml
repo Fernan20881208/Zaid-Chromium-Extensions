@@ -30,8 +30,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+      - name: Reclaim unused tools on a GitHub-hosted runner
+        run: scripts/prepare_hosted_runner.sh
       - name: Check build capacity before downloading Chromium
-        run: python3 scripts/preflight.py --work work
+        run: |
+          set -o pipefail
+          mkdir -p dist
+          python3 scripts/preflight.py --work work | tee dist/runner-capacity.json
       - name: Check release signing configuration
         if: env.ZAID_REQUIRE_RELEASE_SIGNING == '1'
         env:
@@ -89,6 +94,7 @@ jobs:
           path: |
             dist/build.log
             dist/source-check.json
+            dist/runner-capacity.json
           if-no-files-found: ignore
           retention-days: 7
   release:

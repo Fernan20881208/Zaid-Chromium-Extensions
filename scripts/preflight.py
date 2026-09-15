@@ -8,7 +8,7 @@ import shutil
 import sys
 
 
-def inspect(path, disk_gib=200, ram_gib=16):
+def inspect(path, disk_gib=100, ram_gib=16):
     probe = path.resolve()
     while not probe.exists():
         probe = probe.parent

@@ -8,7 +8,9 @@ La base fijada fue publicada como actualización estable general para Android: [
 
 ## Runner
 
-Ubuntu 22.04/24.04 x86_64, 200 GiB libres iniciales y 16 GiB de RAM mínimo; se recomiendan 32–64 GiB y un disco de 300 GiB o más. Son límites conservadores de este proyecto, no una garantía de duración. Chromium puede superar las seis horas del job según CPU y red. El host de compilación x86_64 genera un APK `arm64-v8a`.
+Ubuntu 22.04/24.04 x86_64, 100 GiB libres iniciales y 16 GiB de RAM mínimo; se recomiendan 32–64 GiB y 200 GiB libres de disco o más. Chromium documenta al menos 100 GB de disco y 8 GB de RAM; este proyecto conserva un margen algo mayor. No es una garantía de duración. Chromium puede superar las seis horas del job según CPU y red. El host de compilación x86_64 genera un APK `arm64-v8a`.
+
+Antes de la comprobación, `prepare_hosted_runner.sh` elimina únicamente herramientas preinstaladas de una lista fija en los runners efímeros alojados por GitHub: Android SDK, .NET, GHC y Swift. Chromium descarga su propio SDK. El script no limpia runners propios ni entornos locales.
 
 El runner debe permitir `sudo -n` para las dependencias. Usa un runner dedicado cuando configures uno propio. Las PR externas solo ejecutan la validación en un runner alojado; no ejecutan código de una PR en tu máquina de compilación.
 
@@ -37,7 +39,7 @@ La secuencia de build es:
 
 `is_desktop_android = true` es necesario además de los flags de extensiones. Se conserva `is_official_build = true`, con PGO y ThinLTO desactivados para evitar perfiles de optimización externos y reducir el costo de enlace. Esto no convierte al fork en un producto oficial de Google.
 
-Para reanudar un checkout que ya tiene los parches (se exigen 40 GiB libres de margen, en vez de los 200 GiB previos a una descarga inicial):
+Para reanudar un checkout que ya tiene los parches (se exigen 40 GiB libres de margen, en vez de los 100 GiB previos a una descarga inicial):
 
 ```bash
 scripts/build-apk.sh --skip-sync

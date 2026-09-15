@@ -22,7 +22,7 @@ La versión base es estable; el soporte Desktop Android de extensiones sigue sie
 
 ## Compilar
 
-El runner necesita Ubuntu x86_64, **200 GiB libres antes de sincronizar**, al menos 16 GiB de RAM (32+ recomendados) y acceso a los servidores de Chromium. El APK resultante es ARM64. El runner gratuito estándar de GitHub puede fallar la comprobación de capacidad antes de descargar el código.
+El runner necesita Ubuntu x86_64, **100 GiB libres antes de sincronizar**, al menos 16 GiB de RAM (32+ recomendados) y acceso a los servidores de Chromium. El APK resultante es ARM64. En runners alojados por GitHub se libera el SDK Android y otros toolchains preinstalados que esta build no usa. Si aun así falta espacio, el workflow se detiene antes de descargar el código. Se recomiendan 200 GiB libres para disponer de margen.
 
 ```bash
 scripts/build-apk.sh --install-deps

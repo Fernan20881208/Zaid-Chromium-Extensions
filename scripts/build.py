@@ -21,7 +21,7 @@ def main():
     if args.jobs < 1:
         parser.error("jobs must be positive")
     work = args.work.resolve()
-    check = inspect(work, disk_gib=40 if args.skip_sync else 200)
+    check = inspect(work, disk_gib=40 if args.skip_sync else 100)
     if not check["ready"]:
         raise SystemExit("\n".join(check["problems"]))
     if not args.skip_sync:
